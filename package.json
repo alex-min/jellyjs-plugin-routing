@@ -4,7 +4,7 @@
   "description": "Jelly.js routing Plugin",
   "main": "index.js",
   "scripts": {
-    "test": "true"
+    "test": "mocha"
   },
   "repository": "",
   "keywords": [
@@ -20,6 +20,7 @@
   "dependencies": {
   },
   "devDependencies":{
+    "jellyjs-plugin-httpserver":"0.x.x",
     "jellyjs":"0.x.x",
     "chai": "~1.7.0",
     "mocha": "~1.12.0"    
