@@ -18,8 +18,10 @@
   "author": "alex-min",
   "license": "MIT",
   "dependencies": {
+    "async": "~0.2.9"
   },
   "devDependencies":{
+    "jellyjs-plugin-template":"0.x.x",
     "jellyjs-plugin-httpserver":"0.x.x",
     "jellyjs":"0.x.x",
     "chai": "~1.7.0",
