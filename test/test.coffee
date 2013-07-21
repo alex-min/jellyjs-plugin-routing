@@ -11,6 +11,28 @@ catch e
   root = __dirname + '/../../../../'
   jy = require("#{root}/index.js")
 
+populateWithHttp = (params, cb) ->
+    jelly = new jy.Jelly()
+    async.waterfall([
+      (cb) ->
+          httpServerPlugin = path.dirname(require.resolve('jellyjs-plugin-httpserver'))
+          jelly.getPluginDirectoryList().readPluginFromPath(httpServerPlugin, 'httpserver', cb)
+      # we execute manually the server before
+      (dt, cb) ->
+          dt.getPluginInterface().oncall({}, {pluginParameters:{httpserver:{port:9876}}}, (err) ->
+            cb()
+          )
+      (cb) ->
+        jelly.getPluginDirectoryList().readPluginFromPath(pluginDir, 'routing', (err, dt) -> cb(err, dt))
+      (dt, cb) ->
+        dt.getPluginInterface().load((err) -> cb(err, dt))
+      (dt, cb) ->
+        dt.getPluginInterface().oncall({}, params, (err) ->
+            cb(err)  
+        )
+    ], cb)
+  #---------------
+
 describe('#Plugin::routing', ->
   it('Should load the plugin', (cb) ->
     jelly = new jy.Jelly()
@@ -50,4 +72,78 @@ describe('#Plugin::routing', ->
         cb(err)
       )
   )
+  #-----------------
+  it('Should return an error when no httpserver is loaded', (cb) ->
+    jelly = new jy.Jelly()
+    async.waterfall([
+      (cb) ->
+        jelly.getPluginDirectoryList().readPluginFromPath(pluginDir, 'routing', (err, dt) -> cb(err, dt))
+
+      (dt, cb) -> dt.getPluginInterface().load((err) -> cb(err, dt))
+
+      (dt, cb) ->
+        dt.getPluginInterface().oncall({}, {pluginParameters:{}}, (err) ->
+            try
+              assert.equal(toType(err), 'error')
+              cb()
+            catch e
+              cb(e)          
+        )
+    ], cb)
+  )
+  #-----------------
+  it('Should raise an error if route.url is undefined', (cb) ->
+    populateWithHttp({pluginParameters:{routing:{
+      routes:[
+        {
+          method:["get"]
+          oncall:{}
+        }
+      ]
+    }}}, (err) ->
+      try
+        assert.equal(toType(err), 'error')
+        cb()
+      catch e
+        cb(e)
+    )
+  )
+  #---------------
+  it('Should raise an error if there is an invalid method as an HTTP Verb', (cb) ->
+    populateWithHttp({pluginParameters:{routing:{
+      routes:[
+        {
+          method:['invalid']
+          url:'/'
+          oncall:{}
+        }
+      ]
+    }}}, (err) ->
+      try
+        assert.equal(toType(err), 'error')
+        cb()
+      catch e
+        cb(e)
+    )
+  )
+  #---------------
+  it('Should raise an error if there is an invalid method as oncall', (cb) ->
+    populateWithHttp({pluginParameters:{routing:{
+      routes:[
+        {
+          method:['get', 'post']
+          url:'/'
+          oncall:{type:"invalid"}
+        }
+      ]
+    }}}, (err) ->
+      try
+        assert.equal(toType(err), 'error')
+        cb()
+      catch e
+        cb(e)
+    )
+  )
+  #---------------  
+
 )
