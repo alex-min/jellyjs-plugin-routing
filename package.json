@@ -1,30 +1,30 @@
 {
   "name": "jellyjs-plugin-routing",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Jelly.js routing Plugin",
   "main": "index.js",
   "scripts": {
     "test": "mocha"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alex-min/jellyjs-plugin-routing.git"
+  },
   "keywords": [
     "framework",
     "web"
   ],
-  "repository" : {
-        "type" : "git",
-        "url" : "https://github.com/alex-min/jellyjs-plugin-routing.git"
-  },
   "author": "alex-min",
   "license": "MIT",
   "dependencies": {
-    "async": "~0.2.9"
+    "async": "~0.2.9",
+    "request": "~2.22.0"
   },
-  "devDependencies":{
-    "jellyjs-plugin-template":"0.x.x",
-    "jellyjs-plugin-httpserver":"0.x.x",
-    "jellyjs":"0.x.x",
+  "devDependencies": {
+    "jellyjs-plugin-template": "0.x.x",
+    "jellyjs-plugin-httpserver": "0.x.x",
+    "jellyjs": "0.x.x",
     "chai": "~1.7.0",
-    "mocha": "~1.12.0"    
+    "mocha": "~1.12.0"
   }
 }

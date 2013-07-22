@@ -15,7 +15,7 @@
           {"method":["get"],"url":"/","oncall":
             {
               "type":"rawview",
-              "name":"module1-file.tpl"
+              "name":"module1-file1.tpl"
             }
           }
         ]

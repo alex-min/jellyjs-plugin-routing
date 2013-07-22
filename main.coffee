@@ -1,5 +1,5 @@
 
-parseRoute = (route, httpserver) ->
+parseRoute = (route, httpserver, jelly) ->
   return if typeof route.method == 'undefined' || route.method == null
   route.method ?= ['get']
 
@@ -14,14 +14,19 @@ parseRoute = (route, httpserver) ->
   
   route.oncall.type ?= "rawview"
 
-  for method in route.method
-    if ['get','post','put','delete'].indexOf(method) == -1
+  for verb in route.method
+    if ['get','post','put','delete'].indexOf(verb) == -1
       throw new Error("Invalid HTTP Verb on route #{JSON.stringify(route)}")
     if ['rawview'].indexOf(route.oncall.type) == -1
       throw new Error("Unsupported oncall route type: #{route.oncall.type}")
-      httpserver[method](route.url, (res, req) ->
-        res.send("TODO: IMPLEMENT RAWVIEWS")
-      )
+
+    file = jelly.getChildByIdRec(route.oncall.name)
+    if file == null
+      throw new Error("The id '#{route.oncall.name}' does not exist on route #{JSON.stringify(route)}");
+    tpl = file.getLastContentOfExtension('__template')
+    httpserver[verb](route.url, (res, req) ->
+      req.send(tpl.content())
+    )
 
 module.exports = {
   load: (cb) ->
@@ -40,8 +45,12 @@ module.exports = {
         cb(new Error("No httpserver is registred when loading the routing plugin")); cb = ->
         return
 
+      jelly = @getParentOfClass('Jelly')
+      if jelly == null
+        cb(new Error("The routing plugin must bound to a Jelly class")); cb = ->
+        return
       for route in params.pluginParameters.routing.routes
-        parseRoute(route, httpserver)
+        parseRoute(route, httpserver, jelly)
       cb(); cb = ->
     catch e
       cb(e)
