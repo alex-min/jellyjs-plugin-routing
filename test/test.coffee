@@ -154,5 +154,92 @@ describe('#Plugin::routing', ->
         cb(err)
       )
   )
-  #--------------- 
+  #---------------
+  it('Should route rawviews', (cb) ->
+    jelly = new jy.Jelly()
+    jelly.boot({
+      directory:"#{__dirname}/demo"
+      packagePlugins:['httpserver','template']
+      folderPlugins:[{name:'routing', directory:pluginDir}]
+      onBeforeApplyPlugins: (cb) ->
+        config = jelly.getChildByIdRec("conf/assets.json")
+        cf = config.getLastExecutableContent()
+        cf.pluginParameters.httpserver.port = 8102
+        cb()
+      localRequire: (elm, cb) ->
+        try
+          cb(null, require.resolve(elm))  
+        catch e
+          cb(e)   
+    }, (err) ->
+      cb(err)
+    )
+  )
+  #---------------
+  it('Should route controllers', (cb) ->
+    jelly = new jy.Jelly()
+    jelly.boot({
+      directory:"#{__dirname}/demoController"
+      packagePlugins:['httpserver','template', 'compilejs']
+      folderPlugins:[{name:'routing', directory:pluginDir}]
+      onBeforeApplyPlugins: (cb) ->
+        config = jelly.getChildByIdRec("conf/assets.json")
+        cf = config.getLastExecutableContent()
+        cf.pluginParameters.httpserver.port = 8103
+        cb()
+      localRequire: (elm, cb) ->
+        try
+          cb(null, require.resolve(elm))  
+        catch e
+          cb(e)   
+    }, (err) ->
+      if err
+        cb(err); cb = ->
+        return
+      request("http://127.0.0.1:8103", (err, response, body) ->
+            if err?
+              cb(err); cb = ->
+              return
+            try
+              assert.equal(body, "TPL TEST 1TPL TEST22")
+              cb()
+            catch e
+              cb(e)
+      )
+    )
+  )
+  #---------------
+  it('Should pass parameters to the controller', (cb) ->
+    jelly = new jy.Jelly()
+    jelly.boot({
+      directory:"#{__dirname}/demoControllerParams"
+      packagePlugins:['httpserver','template', 'compilejs']
+      folderPlugins:[{name:'routing', directory:pluginDir}]
+      onBeforeApplyPlugins: (cb) ->
+        config = jelly.getChildByIdRec("conf/assets.json")
+        cf = config.getLastExecutableContent()
+        cf.pluginParameters.httpserver.port = 8104
+        cb()
+      localRequire: (elm, cb) ->
+        try
+          cb(null, require.resolve(elm))  
+        catch e
+          cb(e)   
+    }, (err) ->
+      if err
+        cb(err); cb = ->
+        return
+      file = jelly.getChildByIdRec('module1-file1.js')
+      request("http://127.0.0.1:8104/?id=helloWorld", (err, response, body) ->
+            if err?
+              cb(err); cb = ->
+              return
+            try
+              assert.equal(body, "TPL TEST helloWorldTPL TEST2helloWorld")
+              cb()
+            catch e
+              cb(e)
+      )
+    )
+  )
 )

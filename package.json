@@ -1,6 +1,6 @@
 {
   "name": "jellyjs-plugin-routing",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Jelly.js routing Plugin",
   "main": "index.js",
   "scripts": {
@@ -18,12 +18,13 @@
   "license": "MIT",
   "dependencies": {
     "async": "~0.2.9",
-    "request": "~2.22.0"
+    "request": "~2.22.0",
+    "jellyjs": "0.x.x"
   },
   "devDependencies": {
     "jellyjs-plugin-template": "0.x.x",
     "jellyjs-plugin-httpserver": "0.x.x",
-    "jellyjs": "0.x.x",
+    "jellyjs-plugin-compilejs": "0.x.x",
     "chai": "~1.7.0",
     "mocha": "~1.12.0"
   }

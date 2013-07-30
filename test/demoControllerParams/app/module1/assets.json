@@ -1,0 +1,16 @@
+{
+  "fileList":[
+    {"name":"file1.tpl", "params":{}},
+    {"name":"file2.tpl", "params":{}},
+    {"name":"file1.js", "params":{}},
+    {"name":"file2.js", "params":{}}
+  ],
+  "filePlugins": [
+    "template",
+    "compilejs"
+  ],
+
+  "filePluginParameters" : {
+    "template":{"strip":"true"}
+  }  
+}

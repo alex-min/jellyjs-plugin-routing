@@ -169,7 +169,7 @@ describe('#Plugin::routing', function() {
       }
     });
   });
-  return it('Should route rawviews', function(cb) {
+  it('Should route rawviews', function(cb) {
     var jelly;
 
     jelly = new jy.Jelly();
@@ -226,6 +226,144 @@ describe('#Plugin::routing', function() {
       }
     ], function(err) {
       return cb(err);
+    });
+  });
+  it('Should route rawviews', function(cb) {
+    var jelly;
+
+    jelly = new jy.Jelly();
+    return jelly.boot({
+      directory: "" + __dirname + "/demo",
+      packagePlugins: ['httpserver', 'template'],
+      folderPlugins: [
+        {
+          name: 'routing',
+          directory: pluginDir
+        }
+      ],
+      onBeforeApplyPlugins: function(cb) {
+        var cf, config;
+
+        config = jelly.getChildByIdRec("conf/assets.json");
+        cf = config.getLastExecutableContent();
+        cf.pluginParameters.httpserver.port = 8102;
+        return cb();
+      },
+      localRequire: function(elm, cb) {
+        try {
+          return cb(null, require.resolve(elm));
+        } catch (_error) {
+          e = _error;
+          return cb(e);
+        }
+      }
+    }, function(err) {
+      return cb(err);
+    });
+  });
+  it('Should route controllers', function(cb) {
+    var jelly;
+
+    jelly = new jy.Jelly();
+    return jelly.boot({
+      directory: "" + __dirname + "/demoController",
+      packagePlugins: ['httpserver', 'template', 'compilejs'],
+      folderPlugins: [
+        {
+          name: 'routing',
+          directory: pluginDir
+        }
+      ],
+      onBeforeApplyPlugins: function(cb) {
+        var cf, config;
+
+        config = jelly.getChildByIdRec("conf/assets.json");
+        cf = config.getLastExecutableContent();
+        cf.pluginParameters.httpserver.port = 8103;
+        return cb();
+      },
+      localRequire: function(elm, cb) {
+        try {
+          return cb(null, require.resolve(elm));
+        } catch (_error) {
+          e = _error;
+          return cb(e);
+        }
+      }
+    }, function(err) {
+      if (err) {
+        cb(err);
+        cb = function() {};
+        return;
+      }
+      return request("http://127.0.0.1:8103", function(err, response, body) {
+        if (err != null) {
+          cb(err);
+          cb = function() {};
+          return;
+        }
+        try {
+          assert.equal(body, "TPL TEST 1TPL TEST22");
+          return cb();
+        } catch (_error) {
+          e = _error;
+          return cb(e);
+        }
+      });
+    });
+  });
+  return it('Should pass parameters to the controller', function(cb) {
+    var jelly;
+
+    jelly = new jy.Jelly();
+    return jelly.boot({
+      directory: "" + __dirname + "/demoControllerParams",
+      packagePlugins: ['httpserver', 'template', 'compilejs'],
+      folderPlugins: [
+        {
+          name: 'routing',
+          directory: pluginDir
+        }
+      ],
+      onBeforeApplyPlugins: function(cb) {
+        var cf, config;
+
+        config = jelly.getChildByIdRec("conf/assets.json");
+        cf = config.getLastExecutableContent();
+        cf.pluginParameters.httpserver.port = 8104;
+        return cb();
+      },
+      localRequire: function(elm, cb) {
+        try {
+          return cb(null, require.resolve(elm));
+        } catch (_error) {
+          e = _error;
+          return cb(e);
+        }
+      }
+    }, function(err) {
+      var file;
+
+      if (err) {
+        cb(err);
+        cb = function() {};
+        return;
+      }
+      file = jelly.getChildByIdRec('module1-file1.js');
+      return request("http://127.0.0.1:8104/?id=helloWorld", function(err, response, body) {
+        if (err != null) {
+          cb(err);
+          cb = function() {};
+          return;
+        }
+        try {
+          assert.equal(body, "TPL TEST helloWorldTPL TEST2helloWorld");
+          return cb();
+        } catch (_error) {
+          e = _error;
+          return cb(e);
+        }
+      });
     });
   });
 });

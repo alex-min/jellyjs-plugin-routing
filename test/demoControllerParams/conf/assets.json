@@ -1,0 +1,25 @@
+{
+  "loadedModules": [
+      {"name":"module1","params":{}}
+  ],
+  "plugins":[
+    "routing",
+    "httpserver"
+  ],
+  "pluginParameters":{
+    "httpserver":{
+      "port":"9963"
+    },
+    "routing":{
+      "routes":[
+          {"method":["get"],"url":"/","oncall":
+            {
+              "type":"controller",
+              "name":"module1-file1.js",
+              "template":"module1-file1.tpl"
+            }
+          }
+        ]
+      }
+  }
+}

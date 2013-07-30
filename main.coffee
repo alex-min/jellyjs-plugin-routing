@@ -1,32 +1,56 @@
+async = require('async')
 
-parseRoute = (route, httpserver, jelly) ->
-  return if typeof route.method == 'undefined' || route.method == null
-  route.method ?= ['get']
+Controller = require('./src/Controller')
+controllerRender = require('./src/controllerRender')
 
-  for method,i in route.method
-    route.method[i] = method.toLowerCase()
+parseRoute = (route, httpserver, jelly, cb) ->
+  try
+    if typeof route.method == 'undefined' || route.method == null
+      cb(); cb = ->
+      return
+    route.method ?= ['get']
 
-  if typeof route.url == 'undefined' || route.url == null
-    throw new Error("There is no url defined on route #{JSON.stringify(route)}");
+    for method,i in route.method
+      route.method[i] = method.toLowerCase()
 
-  if typeof route['oncall'] == 'undefined' || route['oncall'] == null
-    throw new Error("There is no oncall defined on route #{JSON.stringify(route)}");
-  
-  route.oncall.type ?= "rawview"
+    if typeof route.url == 'undefined' || route.url == null
+      cb(new Error("There is no url defined on route #{JSON.stringify(route)}")); cb = ->
+      return
 
-  for verb in route.method
-    if ['get','post','put','delete'].indexOf(verb) == -1
-      throw new Error("Invalid HTTP Verb on route #{JSON.stringify(route)}")
-    if ['rawview'].indexOf(route.oncall.type) == -1
-      throw new Error("Unsupported oncall route type: #{route.oncall.type}")
+    if typeof route['oncall'] == 'undefined' || route['oncall'] == null
+      cb(new Error("There is no oncall defined on route #{JSON.stringify(route)}")); cb = ->
+      return
 
-    file = jelly.getChildByIdRec(route.oncall.name)
-    if file == null
-      throw new Error("The id '#{route.oncall.name}' does not exist on route #{JSON.stringify(route)}");
-    tpl = file.getLastContentOfExtension('__template')
-    httpserver[verb](route.url, (res, req) ->
-      req.send(tpl.content())
-    )
+    route.oncall.type ?= "rawview"
+
+    async.each(route.method, (verb, cb) ->
+      if ['get','post','put','delete'].indexOf(verb) == -1
+        cb(new Error("Invalid HTTP Verb '#{verb}' on route #{JSON.stringify(route)}")); cb = ->
+        return
+      if ['rawview','controller'].indexOf(route.oncall.type) == -1
+        cb(new Error("Unsupported oncall route type: #{route.oncall.type} on route #{JSON.stringify(route)}")); cb = ->
+        return
+      file = jelly.getChildByIdRec(route.oncall.name)
+      if file == null
+        cb(new Error("The id '#{route.oncall.name}' does not exist on route #{JSON.stringify(route)}"));cb = ->
+        return
+      tpl = file.getLastContentOfExtension('__template')
+      if route.oncall.type == 'rawview'
+        httpserver[verb](route.url, (res, req) ->
+          if typeof tpl.content == 'string'
+            req.send(tpl.content)
+          else
+            req.send(tpl.content())
+        )
+        cb(); cb = ->
+      else if route.oncall.type == 'controller'
+        controllerRender.bindController(route, verb, httpserver, jelly, file, (err) ->
+          cb(err)
+        )
+    , cb)
+  catch e
+    cb(e); cb = ->
+
 
 module.exports = {
   load: (cb) ->
@@ -49,9 +73,11 @@ module.exports = {
       if jelly == null
         cb(new Error("The routing plugin must bound to a Jelly class")); cb = ->
         return
-      for route in params.pluginParameters.routing.routes
-        parseRoute(route, httpserver, jelly)
-      cb(); cb = ->
+      async.each(params.pluginParameters.routing.routes, (route, cb) ->
+        parseRoute(route, httpserver, jelly, cb)
+      , (err) ->
+        cb(err)
+      )
     catch e
       cb(e)
   unload: (cb) ->
